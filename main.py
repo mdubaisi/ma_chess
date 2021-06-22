@@ -69,23 +69,34 @@ class Board:
                 self.location[i][j] = piece
 
     def get_input(self) -> tuple:
+        nums = ['1', '2', '3', '4', '5', '6', '7', '8']
         print("from: ")
-        old_x = int(input("x: "))
-        old_y = int(input("y: "))
+        old_x = input("x: ")
+        old_y = input("y: ")
 
         print("to: ")
-        new_x = int(input("x: "))
-        new_y = int(input("y: "))
+        new_x = input("x: ")
+        new_y = input("y: ")
 
-        return (old_x, old_y), (new_x, new_y)
+        if old_x in nums and old_y in nums and new_x in nums and new_y in nums:
+            old_x = int(old_x)
+            old_y = int(old_y)
+            new_x = int(new_x)
+            new_y = int(new_y)
+
+            return (old_x, old_y), (new_x, new_y)
+        else:
+            print("Invalid input!")
+            print(self)
+            return self.get_input()
+
 
     def move(self, inp, t):
-        if self.w >= inp[0][0] >= 1 and self.h >= inp[0][1] >= 1 \
-                and self.location[self.h - inp[0][1]][inp[0][0] - 1] is not None \
+        if self.location[self.h - inp[0][1]][inp[0][0] - 1] is not None \
                 and t == self.location[self.h - inp[0][1]][inp[0][0] - 1].color.value:
             self.location[self.h - inp[0][1]][inp[0][0] - 1].move(inp[1][0], inp[1][1], self, t)
         else:
-            print("invalid move!")
+            print("Invalid move!")
             print(self)
             re_inp = self.get_input()
             self.move(re_inp, t)
@@ -602,8 +613,6 @@ class Piece:
             self.moved = True
         else:
             print("Invalid move!")
-            print(self.valid_loc)
-            print(f"{self.pos_x}, {self.pos_y}")
             print(b)
             inp = b.get_input()
             b.move(inp, t)
