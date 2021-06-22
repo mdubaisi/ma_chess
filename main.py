@@ -1,8 +1,6 @@
 from enum import Enum
 from copy import deepcopy
 
-# test
-
 
 class Color(Enum):
     Black = -1
