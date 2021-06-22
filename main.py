@@ -166,6 +166,24 @@ class Board:
 
         return False
 
+    def draw(self):
+        def can_move(color) -> bool:
+            for i in range(self.h):
+                for char in self.location[i]:
+                    if char is None or char.color != color:
+                        continue
+                    if len(char.valid_loc) > 0:
+                        return True
+            return False
+
+        if not self.checked(Color.White) and self.checked(Color.Black) and \
+                (not can_move(Color.White) or not can_move(Color.Black)):
+            print(self)
+            print("Draw!")
+            return True
+
+        return False
+
 
 class Piece:
     def __init__(self, p_type, x, y, p_color):
