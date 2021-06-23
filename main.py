@@ -1,3 +1,4 @@
+import random
 from enum import Enum
 from copy import deepcopy
 
@@ -8,12 +9,18 @@ class Color(Enum):
 
 
 class Board:
-    def __init__(self, w: int, h: int):
+    def __init__(self, w: int, h: int, randomized: bool = False):
         self.h = h
         self.w = w
-        self.location = [[None for i in range(self.w)] for j in range(self.h)]
+        self.randomized = randomized
+        self.have_b_king = False
+        self.have_w_king = False
+        self.location = [[None for _ in range(self.w)] for _ in range(self.h)]
         self.black_king_pos = (5, 8)
         self.white_king_pos = (5, 1)
+        self.pieces = [Piece.King, Piece.King, Piece.Queen, Piece.Bishop, Piece.Bishop,
+                       Piece.Bishop, Piece.Knight, Piece.Knight, Piece.Knight,
+                       Piece.Rock, Piece.Rock, Piece.Pawn, Piece.Pawn, Piece.Pawn, Piece.Pawn]
 
     def __repr__(self):
         s = "\n"
@@ -35,38 +42,75 @@ class Board:
         return s
 
     def set_up(self) -> None:
-        for i in range(self.h):
-            for j in range(self.w):
-                piece = None
+        if self.randomized:
+            for i in range(self.h):
+                for j in range(self.w):
+                    p = self.pieces[random.randrange(0, len(self.pieces))]
+                    piece = None
 
-                if i == 0:
-                    if j == 0 or self.w - j == 1:
-                        piece = Piece(Piece.Rock, j + 1, self.h - i, Color.Black)
-                    elif j == 1 or self.w - j == 2:
-                        piece = Piece(Piece.Knight, j + 1, self.h - i, Color.Black)
-                    elif j == 2 or self.w - j == 3:
-                        piece = Piece(Piece.Bishop, j + 1, self.h - i, Color.Black)
-                    elif j == 3:
-                        piece = Piece(Piece.Queen, j + 1, self.h - i, Color.Black)
-                    elif j == 4:
-                        piece = Piece(Piece.King, j + 1, self.h - i, Color.Black)
-                elif self.h - i == 1:
-                    if j == 0 or self.w - j == 1:
-                        piece = Piece(Piece.Rock, j + 1, self.h - i, Color.White)
-                    elif j == 1 or self.w - j == 2:
-                        piece = Piece(Piece.Knight, j + 1, self.h - i, Color.White)
-                    elif j == 2 or self.w - j == 3:
-                        piece = Piece(Piece.Bishop, j + 1, self.h - i, Color.White)
-                    elif j == 3:
-                        piece = Piece(Piece.Queen, j + 1, self.h - i, Color.White)
-                    elif j == 4:
-                        piece = Piece(Piece.King, j + 1, self.h - i, Color.White)
-                elif i == 1:
-                    piece = Piece(Piece.Pawn, j + 1, self.h - i, Color.Black)
-                elif self.h - i == 2:
-                    piece = Piece(Piece.Pawn, j + 1, self.h - i, Color.White)
+                    if i == 0:
+                        while p == Piece.King and self.have_b_king:
+                            p = self.pieces[random.randrange(0, len(self.pieces))]
+                        piece = Piece(p, j + 1, self.h - i, Color.Black)
+                        if j == self.w - 1 and not self.have_b_king:
+                            piece = Piece(Piece.King, j + 1, self.h - i, Color.Black)
+                        if p == Piece.King:
+                            self.have_b_king = True
 
-                self.location[i][j] = piece
+                    elif self.h - i == 1:
+                        while p == Piece.King and self.have_w_king:
+                            p = self.pieces[random.randrange(0, len(self.pieces))]
+                        piece = Piece(p, j + 1, self.h - i, Color.White)
+                        if j == self.w - 1 and not self.have_w_king:
+                            piece = Piece(Piece.King, j + 1, self.h - i, Color.White)
+                        if p == Piece.King:
+                            self.have_w_king = True
+
+                    elif i == 1:
+                        while p == Piece.King:
+                            p = self.pieces[random.randrange(0, len(self.pieces))]
+
+                        piece = Piece(p, j + 1, self.h - i, Color.Black)
+                    elif self.h - i == 2:
+                        while p == Piece.King:
+                            p = self.pieces[random.randrange(0, len(self.pieces))]
+
+                        piece = Piece(p, j + 1, self.h - i, Color.White)
+
+                    self.location[i][j] = piece
+        else:
+            for i in range(self.h):
+                for j in range(self.w):
+                    piece = None
+
+                    if i == 0:
+                        if j == 0 or self.w - j == 1:
+                            piece = Piece(Piece.Rock, j + 1, self.h - i, Color.Black)
+                        elif j == 1 or self.w - j == 2:
+                            piece = Piece(Piece.Knight, j + 1, self.h - i, Color.Black)
+                        elif j == 2 or self.w - j == 3:
+                            piece = Piece(Piece.Bishop, j + 1, self.h - i, Color.Black)
+                        elif j == 3:
+                            piece = Piece(Piece.Queen, j + 1, self.h - i, Color.Black)
+                        elif j == 4:
+                            piece = Piece(Piece.King, j + 1, self.h - i, Color.Black)
+                    elif self.h - i == 1:
+                        if j == 0 or self.w - j == 1:
+                            piece = Piece(Piece.Rock, j + 1, self.h - i, Color.White)
+                        elif j == 1 or self.w - j == 2:
+                            piece = Piece(Piece.Knight, j + 1, self.h - i, Color.White)
+                        elif j == 2 or self.w - j == 3:
+                            piece = Piece(Piece.Bishop, j + 1, self.h - i, Color.White)
+                        elif j == 3:
+                            piece = Piece(Piece.Queen, j + 1, self.h - i, Color.White)
+                        elif j == 4:
+                            piece = Piece(Piece.King, j + 1, self.h - i, Color.White)
+                    elif i == 1:
+                        piece = Piece(Piece.Pawn, j + 1, self.h - i, Color.Black)
+                    elif self.h - i == 2:
+                        piece = Piece(Piece.Pawn, j + 1, self.h - i, Color.White)
+
+                    self.location[i][j] = piece
 
     def get_input(self) -> tuple:
         nums = ['1', '2', '3', '4', '5', '6', '7', '8']
@@ -89,7 +133,6 @@ class Board:
             print("Invalid input!")
             print(self)
             return self.get_input()
-
 
     def move(self, inp, t):
         if self.location[self.h - inp[0][1]][inp[0][0] - 1] is not None \
@@ -519,22 +562,18 @@ class Piece:
                 new_valid_loc.append((self.pos_x - 1, self.pos_y - 1))
 
             # castling
-            if self.can_castle_left(b):
+            if not b.randomized and self.can_castle_left(b):
                 new_valid_loc.append((self.pos_x - 2, self.pos_y))
-            if self.can_castle_right(b):
+            if not b.randomized and self.can_castle_right(b):
                 new_valid_loc.append((self.pos_x + 2, self.pos_y))
 
         elif self.type == Piece.Pawn:
             if self.color == Color.White:
-                if self.pos_y == 2:
-                    if b.location[b.h - self.pos_y - 1][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y + 1))
+                if self.pos_y <= b.h - 1 and b.location[b.h - self.pos_y - 1][self.pos_x - 1] is None:
+                    new_valid_loc.append((self.pos_x, self.pos_y + 1))
 
-                    if b.location[b.h - self.pos_y - 2][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y + 2))
-                else:
-                    if self.pos_y <= b.h - 1 and b.location[b.h - self.pos_y - 1][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y + 1))
+                if not self.moved and b.location[b.h - self.pos_y - 2][self.pos_x - 1] is None:
+                    new_valid_loc.append((self.pos_x, self.pos_y + 2))
 
                 if self.pos_x <= b.w - 1 and \
                         self.pos_y <= b.h - 1 and b.location[b.h - self.pos_y - 1][self.pos_x] is not None \
@@ -546,15 +585,11 @@ class Piece:
                     new_valid_loc.append((self.pos_x - 1, self.pos_y + 1))
 
             elif self.color == Color.Black:
-                if self.pos_y == b.h - 1:
-                    if b.location[b.h - self.pos_y + 1][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y - 1))
+                if self.pos_y >= 2 and b.location[b.h - self.pos_y + 1][self.pos_x - 1] is None:
+                    new_valid_loc.append((self.pos_x, self.pos_y - 1))
 
-                    if b.location[b.h - self.pos_y + 2][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y - 2))
-                else:
-                    if self.pos_y >= 2 and b.location[b.h - self.pos_y + 1][self.pos_x - 1] is None:
-                        new_valid_loc.append((self.pos_x, self.pos_y - 1))
+                if not self.moved and b.location[b.h - self.pos_y + 2][self.pos_x - 1] is None:
+                    new_valid_loc.append((self.pos_x, self.pos_y - 2))
 
                 if self.pos_x <= b.w - 1 and \
                         self.pos_y >= 0 and b.location[b.h - self.pos_y + 1][self.pos_x] is not None \
@@ -720,11 +755,11 @@ def test(b: Board):
 
 
 def main() -> None:
-    board = Board(8, 8)
+    board = Board(8, 8, True)
     board.set_up()
 
     turn = 1
-    test(board)
+    # test(board)
 
     while not board.checkmated(Color.White.value) and not board.checkmated(Color.Black.value) and not board.draw(turn):
         print(board)
