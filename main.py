@@ -11,7 +11,7 @@ class Board:
     def __init__(self, w: int, h: int):
         self.h = h
         self.w = w
-        self.location = [[None for i in range(self.w)] for j in range(self.h)]
+        self.location = [[None for _ in range(self.w)] for _ in range(self.h)]
         self.black_king_pos = (5, 8)
         self.white_king_pos = (5, 1)
 
@@ -69,45 +69,55 @@ class Board:
                 self.location[i][j] = piece
 
     def get_input(self) -> tuple:
+        nums = ['1', '2', '3', '4', '5', '6', '7', '8']
         print("from: ")
-        old_x = int(input("x: "))
-        old_y = int(input("y: "))
+        old_x = input("x: ")
+        old_y = input("y: ")
 
         print("to: ")
-        new_x = int(input("x: "))
-        new_y = int(input("y: "))
+        new_x = input("x: ")
+        new_y = input("y: ")
 
-        return (old_x, old_y), (new_x, new_y)
+        if old_x in nums and old_y in nums and new_x in nums and new_y in nums:
+            old_x = int(old_x)
+            old_y = int(old_y)
+            new_x = int(new_x)
+            new_y = int(new_y)
+
+            return (old_x, old_y), (new_x, new_y)
+        else:
+            print("Invalid input!")
+            print(self)
+            return self.get_input()
 
     def move(self, inp, t):
-        if self.w >= inp[0][0] >= 1 and self.h >= inp[0][1] >= 1 \
-                and self.location[self.h - inp[0][1]][inp[0][0] - 1] is not None \
+        if self.location[self.h - inp[0][1]][inp[0][0] - 1] is not None \
                 and t == self.location[self.h - inp[0][1]][inp[0][0] - 1].color.value:
             self.location[self.h - inp[0][1]][inp[0][0] - 1].move(inp[1][0], inp[1][1], self, t)
         else:
-            print("invalid move!")
+            print("Invalid move!")
             print(self)
             re_inp = self.get_input()
             self.move(re_inp, t)
 
-    def checked(self, color):
+    def checked(self, t):
         for i in range(self.h):
             for j in range(self.w):
                 char = self.location[i][j]
-                if char is not None and char.color != color:
+                if char is not None and char.color.value != t:
                     char.update_valid_moves(self)
                     if (char.color == Color.White and self.black_king_pos in char.valid_loc) or \
                             (char.color == Color.Black and self.white_king_pos in char.valid_loc):
                         return True
         return False
 
-    def checkmated(self, color):
+    def checkmated(self, t):
         def can_move() -> bool:
             king_pos = ()
             king: Piece
-            if color == Color.White:
+            if t == Color.White.value:
                 king_pos = self.white_king_pos
-            elif color == Color.Black:
+            elif t == Color.Black.value:
                 king_pos = self.black_king_pos
 
             king = self.location[self.h - king_pos[1]][king_pos[0] - 1]
@@ -119,27 +129,27 @@ class Board:
                 test_board.location[test_board.h - pos[1]][pos[0] - 1] = king
                 test_board.location[test_board.h - king.pos_y][king.pos_x - 1] = None
 
-                if color == Color.White:
+                if t == Color.White.value:
                     test_board.white_king_pos = (pos[0], pos[1])
-                elif color == Color.Black:
+                elif t == Color.Black.value:
                     test_board.black_king_pos = (pos[0], pos[1])
 
-                if not test_board.checked(color):
+                if not test_board.checked(t):
                     return True
             return False
 
         def can_defend() -> bool:
             attackers_pos = []
             king_pos = ()
-            if color == Color.White:
+            if t == Color.White.value:
                 king_pos = self.white_king_pos
-            elif color == Color.Black:
+            elif t == Color.Black.value:
                 king_pos = self.black_king_pos
 
             for i in range(self.h):
                 for j in range(self.w):
                     char = self.location[i][j]
-                    if char is not None and char.color != color:
+                    if char is not None and char.color.value != t:
                         char.update_valid_moves(self)
                         if king_pos in char.valid_loc:
                             attackers_pos.append((self.h - i, j + 1))
@@ -150,34 +160,64 @@ class Board:
             for i in range(self.h):
                 for j in range(self.w):
                     char = self.location[i][j]
-                    if char is not None and char.color == color:
+                    if char is not None and char.color.value == t:
                         char.update_valid_moves(self)
                         if attackers_pos[0] in char.valid_loc:
                             return True
             return False
 
-        if self.checked(color) and not can_move() and not can_defend():
+        if self.checked(t) and not can_move() and not can_defend():
             print(self)
-            if color == Color.White:
+            if t == Color.White.value:
                 print("Black won!")
-            elif color == Color.Black:
+            elif t == Color.Black.value:
                 print("White won!")
             return True
 
         return False
 
-    def draw(self):
-        def can_move(color) -> bool:
+    def draw(self, t):
+        def have_moves() -> bool:
+            def can_move() -> bool:
+                king_pos = ()
+                king: Piece
+                if t == Color.White.value:
+                    king_pos = self.white_king_pos
+                elif t == Color.Black.value:
+                    king_pos = self.black_king_pos
+
+                king = self.location[self.h - king_pos[1]][king_pos[0] - 1]
+                king.update_valid_moves(self)
+
+                for pos in self.location[self.h - king_pos[1]][king_pos[0] - 1].valid_loc:
+                    test_board = deepcopy(self)
+
+                    test_board.location[test_board.h - pos[1]][pos[0] - 1] = king
+                    test_board.location[test_board.h - king.pos_y][king.pos_x - 1] = None
+
+                    if t == Color.White.value:
+                        test_board.white_king_pos = (pos[0], pos[1])
+                    elif t == Color.Black.value:
+                        test_board.black_king_pos = (pos[0], pos[1])
+
+                    if not test_board.checked(t):
+                        return True
+                return False
+
             for i in range(self.h):
                 for char in self.location[i]:
-                    if char is None or char.color != color:
+                    if char is None or char.color.value != t:
                         continue
-                    if len(char.valid_loc) > 0:
+
+                    char.update_valid_moves(self)
+
+                    if len(char.valid_loc) > 0 and char.type != Piece.King:
+                        return True
+                    elif can_move():
                         return True
             return False
 
-        if not self.checked(Color.White) and self.checked(Color.Black) and \
-                (not can_move(Color.White) or not can_move(Color.Black)):
+        if not self.checked(Color.White.value) and not self.checked(Color.Black.value) and not have_moves():
             print(self)
             print("Draw!")
             return True
@@ -542,7 +582,7 @@ class Piece:
                         elif self.color == Color.White:
                             test_board.white_king_pos = (new_x, new_y)
 
-                    if not test_board.checked(self.color):
+                    if not test_board.checked(self.color.value):
                         return True
             return False
 
@@ -572,8 +612,6 @@ class Piece:
             self.moved = True
         else:
             print("Invalid move!")
-            print(self.valid_loc)
-            print(f"{self.pos_x}, {self.pos_y}")
             print(b)
             inp = b.get_input()
             b.move(inp, t)
@@ -678,7 +716,6 @@ def test(b: Board):
     b.move(((8, 7), (8, 6)), -1)
     b.move(((7, 6), (7, 7)), 1)
     b.move(((8, 6), (8, 5)), -1)
-    b.move(((6, 6), (8, 4)), 1)
 
 
 def main() -> None:
@@ -688,7 +725,7 @@ def main() -> None:
     turn = 1
     test(board)
 
-    while not board.checkmated(Color.White) and not board.checkmated(Color.Black):
+    while not board.checkmated(Color.White.value) and not board.checkmated(Color.Black.value) and not board.draw(turn):
         print(board)
         inp = board.get_input()
         board.move(inp, turn)
